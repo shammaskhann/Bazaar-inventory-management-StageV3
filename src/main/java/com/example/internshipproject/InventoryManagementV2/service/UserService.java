@@ -2,6 +2,7 @@ package com.example.internshipproject.InventoryManagementV2.service;
 
 import com.example.internshipproject.InventoryManagementV2.entities.UserCredentials;
 import com.example.internshipproject.InventoryManagementV2.entities.UserEntity;
+
 import com.example.internshipproject.InventoryManagementV2.repositories.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

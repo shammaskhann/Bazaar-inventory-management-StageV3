@@ -4,6 +4,7 @@ import com.example.internshipproject.InventoryManagementV2.entities.Store;
 import com.example.internshipproject.InventoryManagementV2.repositories.StoreRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,11 +18,12 @@ public class StoreService {
     StoreRepository storeRepository;
 
     @Transactional(readOnly = true)
-    public Store findStoreById(Long Id){
+    @Cacheable(value = "storeCache", key = "#Id")
+    public Optional<Store> findStoreById(Long Id){
         log.info("findStoreById");
-        Store store = storeRepository.findStoreById(Id).orElse(null);
-        log.info("findStoreById", store);
-        return store;
+        return storeRepository.findStoreById(Id);
     }
+
+
 
 }

@@ -1,6 +1,10 @@
 package com.example.internshipproject.InventoryManagementV2.entities;
 
 import com.example.internshipproject.InventoryManagementV2.core.domain.ChangeType;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,5 +42,7 @@ public class StockMovement {
 //    private Long user_id;
 
     @Column(name = "movement_time")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime movementTime = LocalDateTime.now();
 }

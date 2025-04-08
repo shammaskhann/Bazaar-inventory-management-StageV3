@@ -6,13 +6,12 @@ import com.example.internshipproject.InventoryManagementV2.repositories.Inventor
 import com.example.internshipproject.InventoryManagementV2.repositories.ProductRepository;
 import com.example.internshipproject.InventoryManagementV2.repositories.StockMovementRepository;
 import com.example.internshipproject.InventoryManagementV2.repositories.StoreRepository;
-import com.example.internshipproject.InventoryManagementV2.service.StockMovementProducer;
-import com.example.internshipproject.InventoryManagementV2.service.StockMovementService;
-import com.example.internshipproject.InventoryManagementV2.service.UserService;
+import com.example.internshipproject.InventoryManagementV2.service.*;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -32,15 +31,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class StockMovementController {
 
-
     @Autowired
-    private final StockMovementRepository stockMovementRepository;
+    private InventoryService inventoryService;
     @Autowired
-    private final InventoryRepository inventoryRepository;
+    private ProductService productService;
     @Autowired
-    private final StoreRepository storeRepository;
-    @Autowired
-    private final ProductRepository productRepository;
+    private StoreService storeService;
     @Autowired
     private final UserService userService;
     @Autowired
@@ -78,25 +74,23 @@ public class StockMovementController {
 
             UserEntity user = userService.findByUsername(userDetails.getUsername());
             Long storeId = user.getStoreId();
-            Store store = storeRepository.findById(storeId)
+            Store store = storeService.findStoreById(storeId)
                     .orElseThrow(() -> new RuntimeException("Store not found"));
-            Optional<Product> productOpt = productRepository.findById(request.getProductId());
+            Optional<Product> productOpt = productService.findProductById(request.getProductId());
             if (productOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("status", false, "message", "Product not found"));
             }
 
 
-            Inventory inventory = inventoryRepository.findByStoreIdAndProductId(storeId, request.getProductId())
+            Inventory inventory = inventoryService.findByStoreIdAndProductId(storeId, request.getProductId())
                     .orElseGet(() -> {
-
                         Inventory newInventory = new Inventory();
                         newInventory.setStore(store);
                         newInventory.setProduct(productOpt.get());
                         newInventory.setQuantity(0);
                         return newInventory;
                     });
-
 
             int quantityChange = request.getChangeType() == ChangeType.STOCK_IN
                     ? request.getQuantity()
@@ -110,7 +104,8 @@ public class StockMovementController {
 
             inventory.setQuantity(updatedQuantity);
             inventory.setLastUpdated(LocalDateTime.now());
-            inventoryRepository.save(inventory);
+
+            inventoryService.saveProductInventory(inventory);
 
 
             StockMovementMessage stockMovementMessage = new StockMovementMessage();
@@ -138,7 +133,6 @@ public class StockMovementController {
 
         @GetMapping("/report")
         @RateLimiter(name = "api", fallbackMethod = "rateLimitFallback")
-        @Transactional(readOnly = true)
         public ResponseEntity<?> getStockMovements(
                 @RequestParam Optional<Long> storeId,
                 @RequestParam Optional<Long> productId,
@@ -148,12 +142,12 @@ public class StockMovementController {
 
             try{
                 log.info("Get stock movement list");
-                List<StockMovement> movements = stockMovementRepository.findStockMovements(
-                        storeId.orElse(null),
-                        productId.orElse(null),
-                        changeType.orElse(null),
-                        fromDate.orElse(LocalDateTime.now().minusDays(30)),
-                        toDate.orElse(LocalDateTime.now())
+                List<StockMovement> movements = stockMovementService.findStockMovements(
+                        storeId,
+                        productId,
+                        changeType,
+                        fromDate,
+                        toDate
                 );
 
                 return ResponseEntity.ok(movements);

@@ -19,6 +19,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -56,7 +57,7 @@ public class UserController {
                 ));
             }
 
-            Store store = storeService.findStoreById(storeId.longValue());
+            Optional<Store> store = storeService.findStoreById(storeId.longValue());
             if(store == null){
                 throw new RuntimeException("Store not found");
             }
