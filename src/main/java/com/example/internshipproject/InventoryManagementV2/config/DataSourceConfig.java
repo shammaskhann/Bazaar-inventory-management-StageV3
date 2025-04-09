@@ -48,9 +48,7 @@ public class DataSourceConfig {
         return abstractDataSource;
     }
 
-    /**
-     * master setting
-     */
+
     @Bean(destroyMethod = "close", name="master")
     @Primary
     public HikariDataSource masterDataSource() {
@@ -59,8 +57,8 @@ public class DataSourceConfig {
         String username = props.getProperty("datasource.master.username");
         String password = props.getProperty("datasource.master.password");
 
-        log.info("Master DB URL: " + url);  // Add logging
-        log.info("Master DB Username: " + username);  // Add logging
+        log.info("Master DB URL: " + url);
+        log.info("Master DB Username: " + username);
 
         if (url == null || username == null || password == null) {
             throw new IllegalArgumentException("One or more required properties for master DB are null");
@@ -72,9 +70,6 @@ public class DataSourceConfig {
         return masterDataSource;
     }
 
-    /**
-     * slave setting
-     */
     @Bean(destroyMethod = "close", name="slave")
     public HikariDataSource slaveDataSource() {
         var slaveDataSource = abstractDataSource();
@@ -83,8 +78,8 @@ public class DataSourceConfig {
         String username = props.getProperty("datasource.slave.username");
         String password = props.getProperty("datasource.slave.password");
 
-        log.info("Slave DB URL: " + url);  // Add logging
-        log.info("Slave DB Username: " + username);  // Add logging
+        log.info("Slave DB URL: " + url);
+        log.info("Slave DB Username: " + username);
         if (url == null || username == null || password == null) {
             throw new IllegalArgumentException("One or more required properties for slave DB are null");
         }
